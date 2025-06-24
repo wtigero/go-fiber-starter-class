@@ -183,14 +183,7 @@ docker-compose up -d
 ✅ Design scalable architectures  
 ✅ Optimize for performance  
 ✅ Apply best practices  
-
-## 🤝 Contributing
-
-เรายินดีรับ contributions! กรุณา:
-1. Fork repository
-2. สร้าง feature branch
-3. Submit Pull Request
-
+ 
 ## 📄 License
 
 MIT License - ใช้ได้อย่างอิสระในโปรเจคของคุณ
