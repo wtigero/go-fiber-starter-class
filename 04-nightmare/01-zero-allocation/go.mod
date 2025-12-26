@@ -1,5 +1,5 @@
 module zero-allocation
 
-go 1.21
+go 1.24.4
 
-require () 
+require ()

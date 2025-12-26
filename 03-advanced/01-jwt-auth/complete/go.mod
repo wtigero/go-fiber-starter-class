@@ -1,9 +1,9 @@
 module jwt-auth-complete
 
-go 1.21
+go 1.24.4
 
 require (
-	github.com/gofiber/fiber/v2 v2.52.0
-	github.com/golang-jwt/jwt/v4 v4.5.0
-	golang.org/x/crypto v0.17.0
+	github.com/gofiber/fiber/v2 v2.52.8
+	github.com/golang-jwt/jwt/v5 v5.2.1
+	golang.org/x/crypto v0.33.0
 ) 
