@@ -23,28 +23,28 @@
 ### 03-advanced/ (60+ นาที) - 🎯 ขั้นสูง
 ระดับ **Production-Ready** สำหรับการใช้งานจริง
 
-1. **01-jwt-auth** (60 min) - 🔐 JWT Authentication
-2. **02-rate-limit-cache** (45 min) - ⚡ Rate Limiting & Caching  
-3. **03-database-advanced** (45 min) - 🗄️ Database Advanced
-4. **04-microservices** (90 min) - 🏗️ Microservices Architecture
-5. **05-monitoring** (60 min) - 📊 Monitoring & Metrics
-6. **06-message-queue** (75 min) - 📨 Message Queue
-7. **07-boilerplate** - 🏛️ Architecture Patterns
-8. **08-dependency-injection** - 🔧 Dependency Injection
+1. **01-jwt-auth** (60 min) - 🔐 JWT Authentication & Authorization
+2. **02-rate-limit-cache** (45 min) - ⚡ Rate Limiting & Caching
+3. **03-database-advanced** (45 min) - 🗄️ Database Advanced (Transactions, Migrations)
+4. **04-microservices** (90 min) - 🏗️ Microservices + gRPC
+5. **05-monitoring** (60 min) - 📊 Prometheus & Grafana
+6. **06-message-queue** (75 min) - 📨 Message Queue & Events
+7. **07-boilerplate** - 🏛️ Architecture Patterns (Clean, Hexagonal, Onion)
+8. **08-dependency-injection** - 🔧 Dependency Injection (Constructor, Dig, Wire)
+9. **09-unit-test** - 🧪 Unit Testing & Mocking
+10. **10-redis-cache** (60 min) - 🔴 Redis Cache & Session Management
+11. **11-websocket** (60 min) - 🔌 WebSocket & Real-time Chat
+12. **12-file-upload** (45 min) - 📁 File Upload & Image Processing
 
 ### 04-nightmare/ (Expert Level) - 💀 Performance & Optimization
 ระดับ **Expert** สำหรับ High-Performance Applications
 
 1. **01-zero-allocation** - 🚀 Zero Memory Allocation
 2. **02-memory-pool** - 🏊 Object Pool & Memory Reuse
-3. **03-goroutine-pool** - 🔄 Worker Pool Pattern  
+3. **03-goroutine-pool** - 🔄 Worker Pool Pattern
 4. **04-lock-free** - 🔓 Lock-Free Data Structures
-5. **05-cpu-optimization** - ⚡ CPU Cache & SIMD
-6. **06-gc-tuning** - 🗑️ Garbage Collector Tuning
-7. **07-profiling** - 🔍 Advanced Profiling
-8. **08-benchmarking** - 📊 Micro-benchmarks
-9. **09-assembly** - 🔧 Assembly Integration
-10. **10-real-world** - 🌍 Real Production Cases
+5. **07-profiling** - 🔍 pprof & Performance Analysis
+6. **10-real-world** - 🌍 Real Production Cases (4 Case Studies)
 
 ## 🎯 Learning Progression
 
@@ -68,9 +68,10 @@ Basic API         MongoDB +          Production       Performance
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Go 1.21+
+- Go 1.24+ (recommended)
 - Docker (for intermediate+)
 - MongoDB (for intermediate+)
+- Redis (for advanced caching)
 
 ### เริ่มต้นเรียน
 ```bash
@@ -104,14 +105,18 @@ go-fiber-starter-class/
 │   └── README.md
 │
 ├── 03-advanced/          # 🎯 Production Features
-│   ├── 01-jwt-auth/      # Authentication
-│   ├── 02-rate-limit-cache/  # Performance
-│   ├── 03-database-advanced/ # Database
-│   ├── 04-microservices/     # Architecture
-│   ├── 05-monitoring/        # Observability
-│   ├── 06-message-queue/     # Events
-│   ├── 07-boilerplate/       # Design Patterns
-│   └── 08-dependency-injection/ # DI Patterns
+│   ├── 01-jwt-auth/      # JWT Authentication
+│   ├── 02-rate-limit-cache/  # Rate Limiting
+│   ├── 03-database-advanced/ # Transactions, Migrations
+│   ├── 04-microservices/     # Microservices + gRPC
+│   ├── 05-monitoring/        # Prometheus & Grafana
+│   ├── 06-message-queue/     # Event-driven
+│   ├── 07-boilerplate/       # Architecture Patterns
+│   ├── 08-dependency-injection/ # DI Patterns
+│   ├── 09-unit-test/         # Testing & Mocking
+│   ├── 10-redis-cache/       # Redis Cache & Sessions
+│   ├── 11-websocket/         # Real-time WebSocket
+│   └── 12-file-upload/       # File Upload & Images
 │
 └── 04-nightmare/         # 💀 Performance Optimization
     ├── 01-zero-allocation/   # Memory Optimization

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiber WebSocket Chat</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; margin-bottom: 20px; color: #00d9ff; }
+        .chat-container { background: #16213e; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .chat-header { background: #0f3460; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .room-info { font-size: 14px; color: #888; }
+        .online-count { background: #00d9ff; color: #000; padding: 4px 10px; border-radius: 12px; font-size: 12px; }
+        .messages { height: 400px; overflow-y: auto; padding: 20px; }
+        .message { margin-bottom: 15px; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message.system { text-align: center; color: #666; font-size: 13px; }
+        .message .sender { color: #00d9ff; font-weight: bold; margin-right: 8px; }
+        .message .time { color: #555; font-size: 11px; margin-left: 8px; }
+        .message .content { color: #ddd; }
+        .message.own .sender { color: #4ade80; }
+        .input-area { display: flex; gap: 10px; padding: 15px; background: #0f3460; }
+        input, button { padding: 12px 16px; border: none; border-radius: 8px; font-size: 14px; }
+        input { flex: 1; background: #1a1a2e; color: #fff; }
+        input:focus { outline: 2px solid #00d9ff; }
+        button { background: #00d9ff; color: #000; cursor: pointer; font-weight: bold; }
+        button:hover { background: #00b8d9; }
+        .join-form { text-align: center; padding: 40px; }
+        .join-form input { width: 100%; max-width: 300px; margin-bottom: 10px; text-align: center; }
+        .typing { color: #888; font-style: italic; font-size: 13px; padding: 0 20px 10px; min-height: 25px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💬 Fiber WebSocket Chat</h1>
+
+        <div class="chat-container">
+            <!-- Join Form -->
+            <div id="joinForm" class="join-form">
+                <h2 style="margin-bottom: 20px;">เข้าร่วมห้องแชท</h2>
+                <input type="text" id="usernameInput" placeholder="ชื่อของคุณ" maxlength="20">
+                <input type="text" id="roomInput" placeholder="ชื่อห้อง (เช่น general)" value="general">
+                <br><br>
+                <button onclick="joinRoom()">เข้าร่วม</button>
+            </div>
+
+            <!-- Chat Area -->
+            <div id="chatArea" class="hidden">
+                <div class="chat-header">
+                    <span>ห้อง: <strong id="currentRoom">-</strong></span>
+                    <span class="room-info">
+                        <span id="onlineCount" class="online-count">0 คนออนไลน์</span>
+                    </span>
+                </div>
+                <div class="messages" id="messages"></div>
+                <div class="typing" id="typingIndicator"></div>
+                <div class="input-area">
+                    <input type="text" id="messageInput" placeholder="พิมพ์ข้อความ..." onkeypress="handleKeyPress(event)">
+                    <button onclick="sendMessage()">ส่ง</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        let username = '';
+        let room = '';
+        let typingTimeout;
+
+        function connect() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${location.host}/ws`);
+
+            ws.onopen = () => console.log('Connected to WebSocket');
+
+            ws.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                handleMessage(msg);
+            };
+
+            ws.onclose = () => {
+                console.log('Disconnected');
+                setTimeout(connect, 3000);
+            };
+
+            ws.onerror = (err) => console.error('WebSocket error:', err);
+        }
+
+        function handleMessage(msg) {
+            const messagesDiv = document.getElementById('messages');
+
+            switch(msg.type) {
+                case 'welcome':
+                    addSystemMessage(msg.message);
+                    break;
+
+                case 'message':
+                    const isOwn = msg.from === username;
+                    addChatMessage(msg.from, msg.content, msg.timestamp, isOwn);
+                    break;
+
+                case 'user_joined':
+                    addSystemMessage(`👋 ${msg.username} เข้าร่วมห้อง`);
+                    break;
+
+                case 'user_left':
+                    addSystemMessage(`👋 ${msg.username} ออกจากห้อง`);
+                    break;
+
+                case 'online_users':
+                    document.getElementById('onlineCount').textContent = `${msg.count} คนออนไลน์`;
+                    break;
+
+                case 'typing':
+                    if (msg.username !== username) {
+                        showTyping(msg.username);
+                    }
+                    break;
+            }
+
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addSystemMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'message system';
+            div.textContent = text;
+            document.getElementById('messages').appendChild(div);
+        }
+
+        function addChatMessage(from, content, timestamp, isOwn) {
+            const div = document.createElement('div');
+            div.className = 'message' + (isOwn ? ' own' : '');
+
+            const time = new Date(timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            div.innerHTML = `<span class="sender">${from}</span><span class="content">${escapeHtml(content)}</span><span class="time">${time}</span>`;
+
+            document.getElementById('messages').appendChild(div);
+        }
+
+        function showTyping(user) {
+            const indicator = document.getElementById('typingIndicator');
+            indicator.textContent = `${user} กำลังพิมพ์...`;
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => indicator.textContent = '', 2000);
+        }
+
+        function joinRoom() {
+            username = document.getElementById('usernameInput').value.trim() || 'Anonymous';
+            room = document.getElementById('roomInput').value.trim() || 'general';
+
+            ws.send(JSON.stringify({ type: 'join', username, room }));
+
+            document.getElementById('joinForm').classList.add('hidden');
+            document.getElementById('chatArea').classList.remove('hidden');
+            document.getElementById('currentRoom').textContent = room;
+            document.getElementById('messageInput').focus();
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+
+            if (content && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'message', content, room }));
+                input.value = '';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            } else {
+                // Send typing indicator
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'typing', room }));
+                }
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Connect on load
+        connect();
+    </script>
+</body>
+</html>
