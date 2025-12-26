@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { margin-bottom: 20px; }
+        .upload-box { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .drop-zone { border: 2px dashed #ccc; border-radius: 8px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s; }
+        .drop-zone:hover, .drop-zone.dragover { border-color: #007bff; background: #f0f7ff; }
+        input[type="file"] { display: none; }
+        button { background: #007bff; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-top: 15px; }
+        button:hover { background: #0056b3; }
+        .files-list { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .file-item:last-child { border-bottom: none; }
+        .file-item a { color: #007bff; text-decoration: none; }
+        .delete-btn { background: #dc3545; font-size: 12px; padding: 5px 10px; }
+        .progress { height: 4px; background: #e9ecef; border-radius: 2px; margin-top: 10px; display: none; }
+        .progress-bar { height: 100%; background: #007bff; border-radius: 2px; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📁 File Upload</h1>
+
+        <div class="upload-box">
+            <div class="drop-zone" id="dropZone">
+                <p>📤 ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือก</p>
+                <p style="color: #888; font-size: 14px; margin-top: 10px;">รองรับ: JPG, PNG, GIF, WebP, PDF (สูงสุด 10MB)</p>
+                <input type="file" id="fileInput" multiple accept="image/*,.pdf">
+            </div>
+            <div class="progress" id="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <button onclick="uploadFiles()">อัพโหลด</button>
+        </div>
+
+        <div class="files-list">
+            <h3 style="margin-bottom: 15px;">ไฟล์ที่อัพโหลด</h3>
+            <div id="filesList">กำลังโหลด...</div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        let selectedFiles = [];
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            selectedFiles = Array.from(e.dataTransfer.files);
+            updateDropZone();
+        });
+
+        fileInput.addEventListener('change', () => {
+            selectedFiles = Array.from(fileInput.files);
+            updateDropZone();
+        });
+
+        function updateDropZone() {
+            if (selectedFiles.length > 0) {
+                dropZone.innerHTML = `<p>📎 เลือก ${selectedFiles.length} ไฟล์</p><p style="color:#888;font-size:14px">${selectedFiles.map(f => f.name).join(', ')}</p>`;
+            }
+        }
+
+        async function uploadFiles() {
+            if (selectedFiles.length === 0) { alert('กรุณาเลือกไฟล์'); return; }
+
+            const formData = new FormData();
+            selectedFiles.forEach(f => formData.append('files', f));
+
+            document.getElementById('progress').style.display = 'block';
+
+            try {
+                const res = await fetch('/upload/multiple', { method: 'POST', body: formData });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('อัพโหลดสำเร็จ!');
+                    selectedFiles = [];
+                    dropZone.innerHTML = '<p>📤 ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือก</p>';
+                    loadFiles();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+
+            document.getElementById('progress').style.display = 'none';
+        }
+
+        async function loadFiles() {
+            try {
+                const res = await fetch('/api/files');
+                const data = await res.json();
+
+                if (data.files && data.files.length > 0) {
+                    document.getElementById('filesList').innerHTML = data.files.map(f => `
+                        <div class="file-item">
+                            <a href="${f.url}" target="_blank">${f.name}</a>
+                            <span style="color:#888">${(f.size / 1024).toFixed(1)} KB</span>
+                            <button class="delete-btn" onclick="deleteFile('${f.name}')">ลบ</button>
+                        </div>
+                    `).join('');
+                } else {
+                    document.getElementById('filesList').innerHTML = '<p style="color:#888">ยังไม่มีไฟล์</p>';
+                }
+            } catch (err) {
+                document.getElementById('filesList').innerHTML = '<p style="color:red">โหลดไม่สำเร็จ</p>';
+            }
+        }
+
+        async function deleteFile(filename) {
+            if (!confirm('ลบไฟล์นี้?')) return;
+            try {
+                await fetch(`/api/files/${filename}`, { method: 'DELETE' });
+                loadFiles();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        loadFiles();
+    </script>
+</body>
+</html>
