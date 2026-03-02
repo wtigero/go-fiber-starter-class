@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat - Starter</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { color: #333; }
+        .todo { background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        code { background: #e9ecef; padding: 2px 6px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WebSocket Chat - Starter</h1>
+
+        <div class="todo">
+            <h3>TODO: สร้าง Chat UI</h3>
+            <ol>
+                <li>เพิ่ม connection ไป WebSocket server</li>
+                <li>สร้าง form สำหรับ join room</li>
+                <li>สร้าง chat messages area</li>
+                <li>สร้าง input สำหรับส่งข้อความ</li>
+                <li>Handle events: message, user_joined, user_left</li>
+            </ol>
+        </div>
+
+        <h3>WebSocket Connection</h3>
+        <pre><code>const ws = new WebSocket('ws://localhost:3000/ws');
+
+ws.onopen = () => console.log('Connected');
+ws.onmessage = (e) => console.log(JSON.parse(e.data));
+ws.send(JSON.stringify({type: 'join', room: 'general', username: 'user'}));</code></pre>
+
+        <p>ดูตัวอย่างเต็มที่ <code>complete/static/index.html</code></p>
+    </div>
+</body>
+</html>
